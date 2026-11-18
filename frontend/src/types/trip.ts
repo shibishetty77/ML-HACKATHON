@@ -26,6 +26,6 @@ export interface GpsObservation {
   lat: number;
   lon: number;
   speed_mps?: number;
-  matched_arc_id?: number;
-  confidence?: number;
+  matched_arc_id?: number | null;
+  confidence?: number | null;
 }

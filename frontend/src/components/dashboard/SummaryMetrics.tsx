@@ -37,20 +37,36 @@ export function SummaryMetrics() {
 
   const METRIC_CARDS = [
     {
-      title: 'Top-1 Accuracy',
-      value: metrics ? `${(metrics.top1_accuracy * 100).toFixed(2)}%` : '—',
-      sub: metrics?.top1_accuracy_conditional
-        ? `Cond: ${(metrics.top1_accuracy_conditional * 100).toFixed(1)}%`
-        : 'Observation matching',
+      title: metrics?.top1_accuracy != null ? 'Top-1 Accuracy' : 'Route Arc Precision',
+      value: metrics?.top1_accuracy != null
+        ? `${(metrics.top1_accuracy * 100).toFixed(2)}%`
+        : metrics?.route_arc_precision != null
+          ? `${(metrics.route_arc_precision * 100).toFixed(2)}%`
+          : '—',
+      sub: metrics?.top1_accuracy != null
+        ? metrics.top1_accuracy_conditional != null
+          ? `Cond: ${(metrics.top1_accuracy_conditional * 100).toFixed(1)}%`
+          : 'Per-observation score'
+        : 'Predicted arcs in reference route',
       icon: Target,
       accent: 'text-cyan-400',
       border: 'border-cyan-500/20',
       bg: 'bg-cyan-500/10',
     },
     {
-      title: 'Macro F1-Score',
-      value: metrics ? metrics.macro_f1.toFixed(4) : '—',
-      sub: metrics ? `P: ${(metrics.precision * 100).toFixed(1)}% | R: ${(metrics.recall * 100).toFixed(1)}%` : 'Candidate balanced',
+      title: metrics?.macro_f1 != null ? 'Macro F1-Score' : 'Route Arc F1',
+      value: metrics?.macro_f1 != null
+        ? `${(metrics.macro_f1 * 100).toFixed(2)}%`
+        : metrics?.route_arc_f1 != null
+          ? `${(metrics.route_arc_f1 * 100).toFixed(2)}%`
+          : '—',
+      sub: metrics?.macro_f1 != null
+        ? metrics.precision != null && metrics.recall != null
+          ? `P: ${(metrics.precision * 100).toFixed(1)}% | R: ${(metrics.recall * 100).toFixed(1)}%`
+          : 'Per-observation score'
+        : metrics?.route_arc_recall != null
+          ? `Route arc recall: ${(metrics.route_arc_recall * 100).toFixed(1)}%`
+          : 'Measured against reference route',
       icon: Percent,
       accent: 'text-blue-400',
       border: 'border-blue-500/20',
@@ -58,7 +74,7 @@ export function SummaryMetrics() {
     },
     {
       title: 'Route Continuity',
-      value: metrics?.route_continuity ? `${(metrics.route_continuity * 100).toFixed(2)}%` : '—',
+      value: metrics?.route_continuity != null ? `${(metrics.route_continuity * 100).toFixed(2)}%` : '—',
       sub: 'Topological validity',
       icon: GitCommit,
       accent: 'text-emerald-400',
@@ -66,9 +82,9 @@ export function SummaryMetrics() {
       bg: 'bg-emerald-500/10',
     },
     {
-      title: 'Candidate Miss Rate',
-      value: metrics?.candidate_miss_rate !== undefined ? `${(metrics.candidate_miss_rate * 100).toFixed(2)}%` : '—',
-      sub: stats ? `${stats.candidate_misses} misses` : 'Spatial index coverage',
+      title: 'No-Candidate Rate',
+      value: metrics?.no_candidate_rate != null ? `${(metrics.no_candidate_rate * 100).toFixed(2)}%` : '—',
+      sub: stats ? `${stats.candidate_misses} points without road candidates` : 'Spatial coverage',
       icon: CheckCircle,
       accent: 'text-amber-400',
       border: 'border-amber-500/20',

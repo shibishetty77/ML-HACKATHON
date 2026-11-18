@@ -1,352 +1,224 @@
-"""
-PathSnap — Reference FastAPI ML Backend for Laptop 1
-Provides REST API endpoints for Laptop 2 Evaluator Frontend.
-Binds to 0.0.0.0:8000 for local network mobile hotspot deployment.
-"""
+"""PathSnap evaluator API. Reference routes are read only after inference."""
 
+from __future__ import annotations
+
+import json
+import logging
 import os
-import sys
 import time
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Any
 
-from fastapi import FastAPI, HTTPException, status
+import numpy as np
+import xgboost
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-app = FastAPI(
-    title="PathSnap — Distributed Map-Matching ML API",
-    version="1.0.0",
-    description="Backend API hosting XGBoost classifier and HMM Viterbi route reconstruction",
-)
+from .data import TripRepository, default_source
+from .geometry import FEATURE_NAMES, RoadNetwork, motion_features
+from .hmm import decode
+from .model import CandidateClassifier
 
-# Enable CORS for local network and frontend communication
+ROOT = Path(__file__).resolve().parents[2]
+VERSION = "2.0.0"
+LOGGER = logging.getLogger("pathsnap")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+STARTED = time.monotonic()
+REQUEST_COUNT = 0
+INFERENCE_LATENCIES: list[float] = []
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.repository = TripRepository(default_source())
+    app.state.classifier = CandidateClassifier(ROOT)
+    LOGGER.info("startup model=%s selection=%s trips=%d source=%s",
+                app.state.classifier.path, app.state.classifier.selection,
+                len(app.state.repository.trip_ids), app.state.repository.source)
+    try:
+        yield
+    finally:
+        app.state.repository.close()
+        LOGGER.info("shutdown evaluator data closed")
+
+
+app = FastAPI(title="PathSnap Map Matching API", version=VERSION, lifespan=lifespan)
+configured_origins = [item.strip() for item in os.getenv("PATHSNAP_CORS_ORIGINS", "").split(",") if item.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", *configured_origins],
+    allow_origin_regex=r"^http://(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}):3000$",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
 )
 
-# Locate raw student-test datasets if available
-POSSIBLE_DATA_DIRS = [
-    Path("/Users/sandeeph/Desktop/ML_Lab/Random Forest/data/raw/Student folder/student_test"),
-    Path.cwd() / "data" / "raw" / "Student folder" / "student_test",
-    Path.home() / "Downloads" / "Student folder" / "student_test",
-    Path.home() / "Desktop" / "ML_Lab" / "data" / "raw" / "Student folder" / "student_test",
-]
-
-RAW_DIR: Optional[Path] = None
-for p in POSSIBLE_DATA_DIRS:
-    if p.exists() and any(p.iterdir()):
-        RAW_DIR = p
-        break
-
-EVALUATOR_TRIP_IDS = [
-    "00000000", "00000007", "00000009", "00000040", "00000052",
-    "00000056", "00000065", "00000076", "00000077", "00000091"
-]
-
-SERVER_START_TIME = time.time()
-REQUEST_COUNTER = 0
-
-# --- Request / Response Schemas ---
 
 class PredictRequest(BaseModel):
-    trip_id: str
-
-class GeoBounds(BaseModel):
-    min_lat: float
-    max_lat: float
-    min_lon: float
-    max_lon: float
-
-class TripSummary(BaseModel):
-    trip_id: str
-    status: str
-    num_gps_points: int
-    approx_duration_s: float
-    bounds: Optional[GeoBounds] = None
-
-class TripListResponse(BaseModel):
-    trips: List[TripSummary]
-    total: int
-
-class GpsObservation(BaseModel):
-    obs_id: str
-    timestamp: int
-    lat: float
-    lon: float
-    speed_mps: Optional[float] = None
-    matched_arc_id: Optional[int] = None
-    confidence: Optional[float] = None
-
-class PipelineTiming(BaseModel):
-    preprocessing_ms: float
-    inference_ms: float
-    viterbi_ms: float
-    evaluation_ms: float
-    total_pipeline_ms: float
-
-class EvaluationMetrics(BaseModel):
-    accuracy: float
-    precision: float
-    recall: float
-    macro_f1: float
-    top1_accuracy: float
-    top1_accuracy_conditional: float
-    candidate_miss_rate: float
-    route_continuity: float
-    log_loss: float
-
-class CandidateStats(BaseModel):
-    total_observations: int
-    total_candidates: int
-    avg_candidates_per_obs: float
-    candidate_misses: int
-
-class PredictedRoute(BaseModel):
-    num_matched_segments: int
-    matched_arc_ids: List[int]
-    predicted_polyline: List[List[float]] # [[lat, lon], ...]
-
-class PredictionResponse(BaseModel):
-    trip_id: str
-    status: str
-    timing: PipelineTiming
-    metrics: EvaluationMetrics
-    candidate_stats: CandidateStats
-    route: PredictedRoute
-    gps_observations: List[GpsObservation]
+    trip_id: str = Field(pattern=r"^\d{8}$")
 
 
-# --- Helper Data Loaders ---
+def _components() -> tuple[TripRepository, CandidateClassifier]:
+    return app.state.repository, app.state.classifier
 
-def load_trip_track(trip_id: str) -> List[Dict[str, Any]]:
-    """Loads actual coordinates from .track file if available."""
-    if RAW_DIR:
-        trip_folder = RAW_DIR / trip_id
-        track_file = trip_folder / f"{trip_id}.track" if (trip_folder / f"{trip_id}.track").exists() else trip_folder / ".track"
-        # Search inside folder
-        if not track_file.exists():
-            for f in trip_folder.glob("*.track"):
-                track_file = f
-                break
-        
-        if track_file.exists():
-            obs = []
-            try:
-                with open(track_file) as f:
-                    for i, line in enumerate(f):
-                        parts = line.strip().split()
-                        if len(parts) >= 3:
-                            lon, lat, ts = float(parts[0]), float(parts[1]), float(parts[2])
-                            obs.append({
-                                "obs_id": f"{trip_id}_OBS_{i:04d}",
-                                "timestamp": int(ts),
-                                "lat": lat,
-                                "lon": lon,
-                                "speed_mps": 8.5 + (i % 7) * 0.8,
-                            })
-                if obs:
-                    return obs
-            except Exception as e:
-                print(f"Error loading {track_file}: {e}")
-
-    # Fallback realistic trajectory in London / UTM area
-    n_pts = 120
-    base_lat, base_lon = 51.5074, -0.1278
-    obs = []
-    for i in range(n_pts):
-        obs.append({
-            "obs_id": f"{trip_id}_OBS_{i:04d}",
-            "timestamp": 1700000000 + i * 5,
-            "lat": base_lat + (i * 0.0003),
-            "lon": base_lon + (i * 0.00025) + ((i % 5) * 0.00005),
-            "speed_mps": 10.2 + ((i % 4) * 0.5),
-        })
-    return obs
-
-
-# --- Endpoints ---
 
 @app.get("/health")
-def health_check():
+def health() -> dict[str, Any]:
+    repo, classifier = _components()
     return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "server_time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "model_loaded": True,
-        "model_algorithm": "XGBoost",
-        "features_loaded": 4,
-        "hmm_ready": True,
-        "evaluator_trips_available": len(EVALUATOR_TRIP_IDS),
+        "status": "healthy", "version": VERSION,
+        "server_time": datetime.now(timezone.utc).isoformat(),
+        "model_loaded": bool(classifier.booster), "model_algorithm": "XGBoost",
+        "features_loaded": len(FEATURE_NAMES), "hmm_ready": True,
+        "evaluator_trips_available": len(repo.trip_ids),
     }
 
-@app.get("/api/v1/trips", response_model=TripListResponse)
-def list_trips():
-    global REQUEST_COUNTER
-    REQUEST_COUNTER += 1
 
-    trip_list = []
-    for tid in EVALUATOR_TRIP_IDS:
-        track = load_trip_track(tid)
-        lats = [p["lat"] for p in track]
-        lons = [p["lon"] for p in track]
-        bounds = None
-        if lats and lons:
-            bounds = GeoBounds(
-                min_lat=min(lats),
-                max_lat=max(lats),
-                min_lon=min(lons),
-                max_lon=max(lons),
-            )
-        trip_list.append(
-            TripSummary(
-                trip_id=tid,
-                status="available",
-                num_gps_points=len(track),
-                approx_duration_s=len(track) * 5.0,
-                bounds=bounds,
-            )
-        )
-    return TripListResponse(trips=trip_list, total=len(trip_list))
+@app.get("/api/status")
+def status() -> dict[str, Any]:
+    return health()
 
-@app.post("/api/v1/predict", response_model=PredictionResponse)
-def predict_trip(req: PredictRequest):
-    global REQUEST_COUNTER
-    REQUEST_COUNTER += 1
 
-    if req.trip_id not in EVALUATOR_TRIP_IDS:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Trip ID '{req.trip_id}' not found in reserved evaluation set.",
-        )
+@app.get("/api/v1/trips")
+def trips() -> dict[str, Any]:
+    global REQUEST_COUNT
+    REQUEST_COUNT += 1
+    repo, _ = _components()
+    summaries = []
+    for trip_id in repo.trip_ids:
+        # Read the track only: listing never touches reference routes.
+        track = repo._read(trip_id, "track", columns=3)
+        summaries.append({
+            "trip_id": trip_id, "status": "available", "num_gps_points": len(track),
+            "approx_duration_s": float(track[-1, 2] - track[0, 2]),
+            "bounds": {"min_lat": float(track[:, 1].min()), "max_lat": float(track[:, 1].max()),
+                       "min_lon": float(track[:, 0].min()), "max_lon": float(track[:, 0].max())},
+        })
+    return {"trips": summaries, "total": len(summaries)}
 
-    t0 = time.perf_counter()
-    track = load_trip_track(req.trip_id)
 
-    # Simulated/Actual pipeline timing
-    prep_ms = 35.4
-    inf_ms = 92.1
-    viterbi_ms = 71.6
-    eval_ms = 12.3
+def _route_geometry(road: RoadNetwork, chunks: list[list[int]]) -> list[list[list[float]]]:
+    polylines = []
+    for arc_ids in chunks:
+        line: list[list[float]] = []
+        for arc_id in arc_ids:
+            u, v = road.arcs[arc_id]
+            for node in (u, v):
+                lon, lat = road.nodes[node]
+                point = [float(lat), float(lon)]
+                if not line or line[-1] != point:
+                    line.append(point)
+        if line:
+            polylines.append(line)
+    return polylines
 
-    # Generate matched route segments from trajectory
-    poly = []
-    matched_arcs = []
-    gps_obs = []
 
-    for idx, pt in enumerate(track):
-        # Slightly smoothed map-matched road line
-        poly_lat = pt["lat"] - 0.00004
-        poly_lon = pt["lon"] + 0.00003
-        poly.append([round(poly_lat, 6), round(poly_lon, 6)])
+def _reference_metrics(predicted: list[int], reference: np.ndarray) -> dict[str, float | None]:
+    # .route is an arc sequence, not per-observation labels. Observation Top-1,
+    # candidate F1, log loss, and reference-candidate miss rate are unidentifiable.
+    pred_set, ref_set = set(predicted), set(map(int, reference))
+    common = len(pred_set & ref_set)
+    precision = common / len(pred_set) if pred_set else 0.0
+    recall = common / len(ref_set) if ref_set else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return {"accuracy": None, "precision": None, "recall": None, "macro_f1": None,
+            "top1_accuracy": None, "top1_accuracy_conditional": None,
+            "candidate_miss_rate": None, "log_loss": None,
+            "route_arc_precision": precision, "route_arc_recall": recall, "route_arc_f1": f1}
 
-        arc_id = (idx // 6) + 101
-        if arc_id not in matched_arcs:
-            matched_arcs.append(arc_id)
 
-        conf = 0.92 if (idx % 8 != 0) else 0.74
-        gps_obs.append(
-            GpsObservation(
-                obs_id=pt["obs_id"],
-                timestamp=pt["timestamp"],
-                lat=pt["lat"],
-                lon=pt["lon"],
-                speed_mps=pt.get("speed_mps", 10.0),
-                matched_arc_id=arc_id,
-                confidence=conf,
-            )
-        )
+@app.post("/api/v1/predict")
+def predict(request: PredictRequest) -> dict[str, Any]:
+    global REQUEST_COUNT
+    REQUEST_COUNT += 1
+    repo, classifier = _components()
+    if request.trip_id not in repo.trip_ids:
+        raise HTTPException(404, f"Trip {request.trip_id} is not in the evaluator set")
+    started = time.perf_counter()
+    LOGGER.info("prediction start trip=%s", request.trip_id)
+    try:
+        trip = repo.load(request.trip_id)
+        road = RoadNetwork(trip)
+        xy, speeds, headings = motion_features(trip.track, road)
+        groups = [road.candidates(xy[i], speeds[i], None if np.isnan(headings[i]) else float(headings[i]))
+                  for i in range(len(trip.track))]
+        preprocess_ms = (time.perf_counter() - started) * 1000
+        inference_ms = classifier.score(groups)
+        decode_started = time.perf_counter()
+        result = decode(road, groups, trip.track, xy)
+        viterbi_ms = (time.perf_counter() - decode_started) * 1000
+        evaluation_started = time.perf_counter()
+        route_ids = [arc_id for chunk in result.chunks for arc_id in chunk]
+        reference = repo.reference_route(request.trip_id)
+        if np.any(reference < 0) or np.any(reference >= len(trip.arcs)):
+            raise ValueError("Reference route contains invalid arc IDs")
+        metrics = _reference_metrics(route_ids, reference)
+        metrics["route_continuity"] = result.connected_steps / max(1, len(trip.track) - 1)
+        no_candidates = sum(not group for group in groups)
+        metrics["no_candidate_rate"] = no_candidates / len(groups)
+        evaluation_ms = (time.perf_counter() - evaluation_started) * 1000
+        polylines = _route_geometry(road, result.chunks)
+        observations = []
+        for i, (lon, lat, timestamp) in enumerate(trip.track):
+            matched = result.assignments[i]
+            observations.append({"obs_id": f"{request.trip_id}_OBS_{i:04d}",
+                                 "timestamp": float(timestamp), "lat": float(lat), "lon": float(lon),
+                                 "speed_mps": float(speeds[i]),
+                                 "matched_arc_id": matched.arc_id if matched else None,
+                                 "confidence": matched.probability if matched else None})
+        total_ms = (time.perf_counter() - started) * 1000
+        INFERENCE_LATENCIES.append(total_ms)
+        state = "failed" if not route_ids else ("success" if result.unresolved_steps == 0 else "partial")
+        LOGGER.info("prediction finish trip=%s status=%s observations=%d candidates=%d matched=%d unresolved=%d total_ms=%.1f",
+                    request.trip_id, state, len(groups), sum(map(len, groups)), len(route_ids),
+                    result.unresolved_steps, total_ms)
+        return {
+            "trip_id": request.trip_id, "status": state,
+            "timing": {"preprocessing_ms": preprocess_ms, "inference_ms": inference_ms,
+                       "viterbi_ms": viterbi_ms, "evaluation_ms": evaluation_ms,
+                       "total_pipeline_ms": total_ms},
+            "metrics": metrics,
+            "candidate_stats": {"total_observations": len(groups),
+                                "total_candidates": sum(map(len, groups)),
+                                "avg_candidates_per_obs": sum(map(len, groups)) / len(groups),
+                                "candidate_misses": no_candidates,
+                                "no_candidate_observations": no_candidates},
+            "route": {"num_matched_segments": len(route_ids), "matched_arc_ids": route_ids,
+                      "predicted_polyline": polylines[0] if polylines else [],
+                      "polylines": polylines, "arc_chunks": result.chunks,
+                      "unresolved_steps": result.unresolved_steps},
+            "gps_observations": observations,
+            "candidate_rankings": [{"obs_id": observations[i]["obs_id"],
+                                    "candidates": [{"arc_id": c.arc_id, "probability": c.probability}
+                                                   for c in group[:5]]}
+                                   for i, group in enumerate(groups)],
+        }
+    except HTTPException:
+        raise
+    except Exception:
+        LOGGER.exception("prediction failure trip=%s", request.trip_id)
+        raise HTTPException(500, "Prediction failed; inspect backend logs for details")
 
-    total_pipeline_ms = (time.perf_counter() - t0) * 1000 + prep_ms + inf_ms + viterbi_ms + eval_ms
-
-    # Return authentic evaluation metrics
-    # Note: Ground-truth reference route is kept strictly on Laptop 1; only metrics returned
-    metrics = EvaluationMetrics(
-        accuracy=0.9412,
-        precision=0.7845,
-        recall=0.8690,
-        macro_f1=0.8914,
-        top1_accuracy=0.8245,
-        top1_accuracy_conditional=0.8271,
-        candidate_miss_rate=0.0031,
-        route_continuity=0.9125,
-        log_loss=0.1478,
-    )
-
-    candidate_stats = CandidateStats(
-        total_observations=len(track),
-        total_candidates=len(track) * 8,
-        avg_candidates_per_obs=8.0,
-        candidate_misses=max(1, int(len(track) * 0.003)),
-    )
-
-    route = PredictedRoute(
-        num_matched_segments=len(matched_arcs),
-        matched_arc_ids=matched_arcs,
-        predicted_polyline=poly,
-    )
-
-    timing = PipelineTiming(
-        preprocessing_ms=prep_ms,
-        inference_ms=inf_ms,
-        viterbi_ms=viterbi_ms,
-        evaluation_ms=eval_ms,
-        total_pipeline_ms=round(total_pipeline_ms, 2),
-    )
-
-    return PredictionResponse(
-        trip_id=req.trip_id,
-        status="success",
-        timing=timing,
-        metrics=metrics,
-        candidate_stats=candidate_stats,
-        route=route,
-        gps_observations=gps_obs,
-    )
 
 @app.get("/api/v1/model/info")
-def model_info():
-    return {
-        "model_family": "Gradient Boosted Decision Trees",
-        "algorithm": "XGBoost",
-        "version": "2.1.4",
-        "framework": "xgboost-python",
-        "feature_count": 4,
-        "feature_names": [
-            "distance_to_segment_m",
-            "projection_fraction",
-            "observation_speed_mps",
-            "heading_difference_rad",
-        ],
-        "hyperparameters": {
-            "n_estimators": 300,
-            "max_depth": 6,
-            "learning_rate": 0.05,
-            "subsample": 0.8,
-            "colsample_bytree": 0.8,
-            "min_child_weight": 1,
-            "objective": "binary:logistic",
-            "eval_metric": "logloss",
-        },
-        "decoder": {
-            "type": "Hidden Markov Model with Viterbi Decoding",
-            "emission_source": "XGBoost positive-class probability",
-            "transition_metric": "Road-network graph adjacency + distance penalty",
-        },
-    }
+def model_info() -> dict[str, Any]:
+    _, classifier = _components()
+    params_path = ROOT / "outputs" / "xgboost" / "hyperparameter_tuning" / "best_hyperparameters.json"
+    params = json.loads(params_path.read_text(encoding="utf-8")) if classifier.selection == "tuned" and params_path.is_file() else {}
+    return {"model_family": "Gradient Boosted Decision Trees", "algorithm": "XGBoost",
+            "version": xgboost.__version__, "framework": "xgboost-python",
+            "feature_count": len(FEATURE_NAMES), "feature_names": list(FEATURE_NAMES),
+            "hyperparameters": params, "model_selection": classifier.selection,
+            "model_file": str(classifier.path), "fallback_reason": classifier.fallback_reason,
+            "decoder": {"type": "Hidden Markov Model with log-space Viterbi decoding",
+                        "emission_source": "XGBoost positive-class probability",
+                        "transition_metric": "Directed shortest path and GPS displacement penalty"}}
+
 
 @app.get("/api/v1/system/metrics")
-def system_metrics():
-    return {
-        "uptime_seconds": round(time.time() - SERVER_START_TIME, 1),
-        "total_requests": REQUEST_COUNTER,
-        "avg_inference_latency_ms": 118.5,
-    }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+def system_metrics() -> dict[str, Any]:
+    return {"uptime_seconds": time.monotonic() - STARTED, "total_requests": REQUEST_COUNT,
+            "avg_inference_latency_ms": sum(INFERENCE_LATENCIES) / len(INFERENCE_LATENCIES) if INFERENCE_LATENCIES else 0.0}

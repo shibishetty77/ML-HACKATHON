@@ -16,7 +16,7 @@ export function CandidateInspector({ observations = [] }: CandidateInspectorProp
   const filtered = observations.filter(
     (o) =>
       o.obs_id.toLowerCase().includes(search.toLowerCase()) ||
-      (o.matched_arc_id !== undefined && String(o.matched_arc_id).includes(search))
+      (o.matched_arc_id != null && String(o.matched_arc_id).includes(search))
   );
 
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
@@ -85,7 +85,7 @@ export function CandidateInspector({ observations = [] }: CandidateInspectorProp
                   </span>
                 </td>
                 <td className="py-2 px-3">
-                  {obs.confidence !== undefined ? (
+                  {obs.confidence != null ? (
                     <span
                       className={`font-semibold ${
                         obs.confidence > 0.8

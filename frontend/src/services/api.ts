@@ -3,6 +3,14 @@ import { ApiError } from '@/types/api';
 const DEFAULT_TIMEOUT_MS = 15000;
 const STORAGE_KEY = 'pathsnap_api_base_url';
 
+export function getDefaultApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, '');
+  }
+  return 'http://localhost:8000';
+}
+
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -10,11 +18,7 @@ export function getApiBaseUrl(): string {
       return saved.trim().replace(/\/+$/, '');
     }
   }
-  const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (envUrl && envUrl.trim()) {
-    return envUrl.trim().replace(/\/+$/, '');
-  }
-  return 'http://localhost:8000';
+  return getDefaultApiBaseUrl();
 }
 
 export function setApiBaseUrl(url: string): void {

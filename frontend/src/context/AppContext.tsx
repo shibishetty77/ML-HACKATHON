@@ -63,8 +63,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetchEvaluatorTrips();
       setTrips(res.trips || []);
-      if (res.trips?.length > 0 && !selectedTripId) {
-        setSelectedTripId(res.trips[0].trip_id);
+      if (res.trips?.length > 0) {
+        setSelectedTripId((current) => current ?? res.trips[0].trip_id);
       }
     } catch (err: unknown) {
       const msg =
@@ -75,11 +75,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoadingTrips(false);
     }
-  }, [serverStatus, selectedTripId]);
+  }, [serverStatus]);
 
   useEffect(() => {
     if (serverStatus === 'connected') {
-      loadTrips();
+      const timer = window.setTimeout(() => { void loadTrips(); }, 0);
+      return () => window.clearTimeout(timer);
     }
   }, [serverStatus, loadTrips]);
 

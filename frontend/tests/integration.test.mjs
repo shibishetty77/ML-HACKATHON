@@ -1,7 +1,7 @@
-const test = require('node:test');
-const assert = require('node:assert');
+import test from 'node:test';
+import assert from 'node:assert/strict';
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = process.env.PATHSNAP_TEST_API_URL || 'http://localhost:8000';
 
 test('1. GET /health - Server health and model loading', async () => {
   const res = await fetch(`${BASE_URL}/health`);
@@ -22,25 +22,30 @@ test('2. GET /api/v1/trips - All 10 evaluator trips returned', async () => {
   assert.strictEqual(data.trips.length, 10);
   
   const tripIds = data.trips.map(t => t.trip_id);
-  assert.ok(tripIds.includes('00000000'));
-  assert.ok(tripIds.includes('00000007'));
-  assert.ok(tripIds.includes('00000091'));
+  assert.ok(tripIds.includes('00000015'));
+  assert.ok(tripIds.includes('00000023'));
+  assert.ok(tripIds.includes('00000094'));
 });
 
 test('3. POST /api/v1/predict - Inference and metric generation', async () => {
   const res = await fetch(`${BASE_URL}/api/v1/predict`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ trip_id: '00000000' })
+    body: JSON.stringify({ trip_id: '00000023' })
   });
   assert.strictEqual(res.status, 200);
   const data = await res.json();
   
-  assert.strictEqual(data.trip_id, '00000000');
+  assert.strictEqual(data.trip_id, '00000023');
   assert.strictEqual(data.status, 'success');
-  assert.ok(data.metrics.top1_accuracy > 0.8);
-  assert.ok(data.metrics.macro_f1 > 0.85);
-  assert.ok(data.metrics.route_continuity > 0.88);
+  assert.strictEqual(data.metrics.top1_accuracy, null);
+  assert.strictEqual(data.metrics.macro_f1, null);
+  for (const key of ['route_arc_precision', 'route_arc_recall', 'route_arc_f1']) {
+    assert.ok(Number.isFinite(data.metrics[key]) && data.metrics[key] >= 0 && data.metrics[key] <= 1);
+  }
+  const { route_arc_precision: precision, route_arc_recall: recall, route_arc_f1: f1 } = data.metrics;
+  assert.ok(Math.abs(f1 - (precision + recall ? 2 * precision * recall / (precision + recall) : 0)) < 1e-9);
+  assert.ok(data.metrics.route_continuity >= 0 && data.metrics.route_continuity <= 1);
   assert.ok(data.route.predicted_polyline.length > 0);
   assert.ok(data.gps_observations.length > 0);
 
@@ -53,9 +58,17 @@ test('4. POST /api/v1/predict - 404 for invalid trip', async () => {
   const res = await fetch(`${BASE_URL}/api/v1/predict`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ trip_id: 'invalid_trip_999' })
+    body: JSON.stringify({ trip_id: '99999999' })
   });
   assert.strictEqual(res.status, 404);
+});
+
+test('POST /api/v1/predict - 422 for malformed trip ID', async () => {
+  const res = await fetch(`${BASE_URL}/api/v1/predict`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ trip_id: '../invalid' })
+  });
+  assert.strictEqual(res.status, 422);
 });
 
 test('5. GET /api/v1/model/info - XGBoost metadata verification', async () => {

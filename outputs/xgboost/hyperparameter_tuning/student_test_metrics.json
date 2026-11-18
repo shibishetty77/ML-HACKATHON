@@ -1,0 +1,24 @@
+{
+  "candidate_accuracy": 0.9377982511792128,
+  "macro_f1": 0.8759132810362589,
+  "precision": 0.8109987764827098,
+  "recall": 0.7668046760837798,
+  "roc_auc": 0.9675442119064375,
+  "log_loss": 0.15807996690273285,
+  "conditional_top1_accuracy": 0.8284827082318558,
+  "end_to_end_top1_accuracy": 0.8011186340889019,
+  "candidate_hit_rate": 0.9669708566382101,
+  "candidate_miss_rate": 0.03302914336178986,
+  "training_time_s": 25.14471240000057,
+  "inference_time_s": 0.11628159999963827,
+  "confusion_matrix": [
+    [
+      89400,
+      2935
+    ],
+    [
+      3830,
+      12594
+    ]
+  ]
+}

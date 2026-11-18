@@ -116,7 +116,7 @@ export function TopNavbar() {
         </div>
       </header>
 
-      <ConnectionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      {isModalOpen && <ConnectionModal isOpen={true} onClose={() => setIsModalOpen(false)} />}
     </>
   );
 }

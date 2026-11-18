@@ -8,11 +8,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
   Cell,
 } from 'recharts';
 import { EvaluationMetrics, PipelineTiming } from '@/types/prediction';
@@ -32,27 +27,21 @@ export function PerformanceCharts({ metrics, timing }: PerformanceChartsProps) {
   }
 
   const metricBarData = [
-    { name: 'Top-1 Acc', value: +(metrics.top1_accuracy * 100).toFixed(1), color: '#06b6d4' },
-    { name: 'Macro F1', value: +(metrics.macro_f1 * 100).toFixed(1), color: '#38bdf8' },
-    { name: 'Precision', value: +(metrics.precision * 100).toFixed(1), color: '#3b82f6' },
-    { name: 'Recall', value: +(metrics.recall * 100).toFixed(1), color: '#6366f1' },
-    { name: 'Continuity', value: +( (metrics.route_continuity || 0) * 100).toFixed(1), color: '#10b981' },
-  ];
-
-  const radarData = [
-    { subject: 'Top-1 Accuracy', score: +(metrics.top1_accuracy * 100).toFixed(1), fullMark: 100 },
-    { subject: 'Precision', score: +(metrics.precision * 100).toFixed(1), fullMark: 100 },
-    { subject: 'Recall', score: +(metrics.recall * 100).toFixed(1), fullMark: 100 },
-    { subject: 'Macro F1', score: +(metrics.macro_f1 * 100).toFixed(1), fullMark: 100 },
-    { subject: 'Continuity', score: +( (metrics.route_continuity || 0) * 100).toFixed(1), fullMark: 100 },
-  ];
+    { name: 'Top-1 Acc', value: metrics.top1_accuracy, color: '#06b6d4' },
+    { name: 'Macro F1', value: metrics.macro_f1, color: '#38bdf8' },
+    { name: 'Arc Precision', value: metrics.route_arc_precision, color: '#06b6d4' },
+    { name: 'Arc Recall', value: metrics.route_arc_recall, color: '#818cf8' },
+    { name: 'Arc F1', value: metrics.route_arc_f1, color: '#3b82f6' },
+    { name: 'Continuity', value: metrics.route_continuity, color: '#10b981' },
+  ].filter((item): item is { name: string; value: number; color: string } => item.value != null)
+    .map((item) => ({ ...item, value: +(item.value * 100).toFixed(1) }));
 
   const timingData = timing
-    ? [
-        { stage: 'Preprocessing', time_ms: +(timing.preprocessing_ms || 15).toFixed(1) },
-        { stage: 'XGBoost Inf', time_ms: +(timing.inference_ms || 45).toFixed(1) },
-        { stage: 'Viterbi Decode', time_ms: +(timing.viterbi_ms || 35).toFixed(1) },
-        { stage: 'Evaluation', time_ms: +(timing.evaluation_ms || 8).toFixed(1) },
+        ? [
+        { stage: 'Preprocessing', time_ms: +(timing.preprocessing_ms ?? 0).toFixed(1) },
+        { stage: 'XGBoost Inf', time_ms: +(timing.inference_ms ?? 0).toFixed(1) },
+        { stage: 'Viterbi Decode', time_ms: +(timing.viterbi_ms ?? 0).toFixed(1) },
+        { stage: 'Evaluation', time_ms: +(timing.evaluation_ms ?? 0).toFixed(1) },
       ]
     : [];
 
@@ -61,7 +50,7 @@ export function PerformanceCharts({ metrics, timing }: PerformanceChartsProps) {
       {/* Metric Bars */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-sm">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">
-          Core Model Performance (%)
+          Measured Evaluation Metrics (%)
         </h3>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">

@@ -1,15 +1,19 @@
 import { GpsObservation } from './trip';
 
 export interface EvaluationMetrics {
-  accuracy: number;
-  precision: number;
-  recall: number;
-  macro_f1: number;
-  top1_accuracy: number;
-  top1_accuracy_conditional?: number;
-  candidate_miss_rate?: number;
-  route_continuity?: number;
-  log_loss?: number;
+  accuracy: number | null;
+  precision: number | null;
+  recall: number | null;
+  macro_f1: number | null;
+  top1_accuracy: number | null;
+  top1_accuracy_conditional?: number | null;
+  candidate_miss_rate?: number | null;
+  route_continuity?: number | null;
+  log_loss?: number | null;
+  route_arc_precision?: number;
+  route_arc_recall?: number;
+  route_arc_f1?: number;
+  no_candidate_rate?: number;
 }
 
 export interface PipelineTiming {
@@ -31,6 +35,9 @@ export interface PredictedRoute {
   num_matched_segments: number;
   matched_arc_ids: number[];
   predicted_polyline: [number, number][]; // [lat, lon] tuples
+  polylines?: [number, number][][];
+  arc_chunks?: number[][];
+  unresolved_steps?: number;
 }
 
 export interface PredictionRequest {

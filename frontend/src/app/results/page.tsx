@@ -43,7 +43,7 @@ export default function PredictionResultsPage() {
               )}
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">
-              Server-side ground truth evaluation computed internally on Laptop 1
+              Server-side route arc overlap and directed continuity; candidate metrics require observation labels
             </p>
           </div>
         </div>
@@ -81,6 +81,12 @@ export default function PredictionResultsPage() {
         <>
           {/* Metrics summary */}
           <SummaryMetrics />
+
+          {predictionResult && predictionResult.metrics.top1_accuracy == null && predictionResult.metrics.macro_f1 == null && (
+            <p className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-xs text-slate-300">
+              Candidate Top-1 Accuracy and Macro F1 need a reference arc for each GPS point. This evaluator set provides a reference route only, so the cards show measured route arc precision and F1 instead.
+            </p>
+          )}
 
           {/* Charts breakdown */}
           <PerformanceCharts

@@ -87,8 +87,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               />
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
-              Find Laptop 1&apos;s IP via: <code className="text-cyan-400">ipconfig getifaddr en0</code> (macOS) or{' '}
-              <code className="text-cyan-400">hostname -I</code> (Linux).
+              On Windows Laptop 1, run <code className="text-cyan-400">Get-NetIPAddress -AddressFamily IPv4</code> and use the Wi-Fi address.
             </p>
           </div>
 
@@ -107,7 +106,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>HMM/Viterbi Route Decoder:</span>
-                <span className="text-emerald-400 font-medium">Ready</span>
+                <span className="text-emerald-400 font-medium">{serverHealth.hmm_ready ? 'Ready' : 'Unavailable'}</span>
               </div>
             </div>
           )}

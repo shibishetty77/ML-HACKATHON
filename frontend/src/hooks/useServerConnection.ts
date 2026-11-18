@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { checkServerHealth } from '@/services/health.service';
-import { getApiBaseUrl, setApiBaseUrl } from '@/services/api';
+import { getApiBaseUrl, getDefaultApiBaseUrl, setApiBaseUrl } from '@/services/api';
 import { HealthResponse } from '@/types/api';
 
 export type ConnectionStatus = 'checking' | 'connected' | 'disconnected' | 'error';
@@ -13,7 +13,7 @@ export function useServerConnection(autoPollIntervalMs: number = 10000) {
   const [healthData, setHealthData] = useState<HealthResponse | null>(null);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [baseUrl, setBaseUrlState] = useState<string>(getApiBaseUrl());
+  const [baseUrl, setBaseUrlState] = useState<string>(getDefaultApiBaseUrl());
 
   const checkConnection = useCallback(async () => {
     setStatus((prev) => (prev === 'connected' ? 'connected' : 'checking'));
@@ -48,20 +48,20 @@ export function useServerConnection(autoPollIntervalMs: number = 10000) {
   );
 
   useEffect(() => {
-    checkConnection();
-
     const handleUrlChange = () => {
       setBaseUrlState(getApiBaseUrl());
-      checkConnection();
+      void checkConnection();
     };
 
     window.addEventListener('pathsnap_api_url_changed', handleUrlChange);
+    const initialCheck = window.setTimeout(handleUrlChange, 0);
 
     const interval = setInterval(() => {
       checkConnection();
     }, autoPollIntervalMs);
 
     return () => {
+      window.clearTimeout(initialCheck);
       window.removeEventListener('pathsnap_api_url_changed', handleUrlChange);
       clearInterval(interval);
     };

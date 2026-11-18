@@ -11,9 +11,9 @@ This audit separates supplied evidence from claims in the original repository. N
 | HMM and Viterbi | Original backend had simulated output; new directed graph and log-space decoder are implemented | Implemented and tested |
 | Backend API | Original API returned fabricated route IDs, metrics and timings; new API computes them from model and raw files | Implemented and tested |
 | Next.js evaluator UI | Present in repository; route rendering and unavailable metrics updated | Present; production build and six live API tests pass |
-| Five-model comparison | Checkout contains executed XGBoost, Random Forest, SVM and KNN notebooks. The fifth MLP notebook found separately in Downloads has no executed cells, and its referenced training code/results were not supplied. The four notebooks do not by themselves establish a common comparison protocol. | Incomplete; verify comparable runs before reporting five-model figures |
-| Consolidated technical report PDF | No report PDF found in the repository or supplied ZIPs | Missing; requires the team's verified five-model results, plots, and interpretation |
-| Folium interactive map | No verified Folium map source or HTML found in the repository | Missing |
+| Five-model comparison | The supplied Team 9 MLP folder contains a completed four-feature run, archived under `analysis/mlp_shared/`. `analysis/report_benchmark.py` re-evaluates Random Forest, linear SVM and KNN on the same four-feature tables and frozen trip folds used by XGBoost and MLP. Results are in `analysis/results/`. Original notebook runs used different contracts and remain separate. | Present; fixed-configuration common comparison, with measured caveats |
+| Consolidated technical report PDF | `docs/PathSnap_Team9_Technical_Report.pdf` is built from archived results, common re-evaluations and supplied demo screenshots by `analysis/build_team9_report.py`. | Present; Team 9 should review and add member names if desired |
+| Folium interactive map | `analysis/folium_map.py` generates `analysis/results/folium_trip_00000030.html` from evaluator GPS, network, post-inference reference and deployed route. A rendered screenshot is in `analysis/evidence/`. | Present |
 | GitHub submission | Integrated backend, frontend, tests, and tuned model are included in this repository update | Included in this submission |
 
 ## Metric limitation
@@ -28,6 +28,6 @@ On student-test trip `00000000`, the reconstructed 50 m candidate generator repr
 
 The SQLite study contains 25 `COMPLETE` and 6 `FAIL` trials; `optuna_trials.csv` contains 25 rows. Trial 17 specifies 550 boosting rounds and the shipped model contains 550 rounds and four features. All 16 tuning archive files in the checkout are byte-identical to the supplied ZIP. The trials CSV gives Trial 17's original search score as 0.795488 Top-1 / 0.855889 macro F1, while the report's later final CV comparison lists 0.795549 / 0.855920. These appear to represent different evaluation runs; retain both labels and reconcile the run details before quoting a single CV figure.
 
-## Next submission work
+## Remaining limitations
 
-The team should reconcile the backend features with the newly added shared preprocessing code, supply the baseline model, complete a fifth model experiment under the common protocol, verify the four existing notebooks' results on the same folds and features, generate actual Folium maps, and compile one consolidated report PDF using only reproducible results. The original UI/README had numbers that did not match the supplied XGBoost tuning report; do not reuse those figures without verification.
+The baseline XGBoost model artifact is still absent, so the baseline-versus-tuned comparison relies on archived metrics. The backend shares the four feature names and 50 m radius with training, but its candidate generator can return more than the training table's ten arcs per observation. The student-test classifier table and evaluator route ablation are reported as separate evaluation units. Team 9 should review the PDF's analysis and add member details before final submission.

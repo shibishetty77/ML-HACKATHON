@@ -1,0 +1,182 @@
+{
+  "model": "knn",
+  "features": [
+    "distance_to_segment_m",
+    "projection_fraction",
+    "observation_speed_mps",
+    "heading_difference_rad"
+  ],
+  "protocol": "Shared four-feature candidate CSVs; frozen five trip folds; full train and validation rows; 10 held-out student-test trips.",
+  "configuration": {
+    "memory": null,
+    "steps": [
+      [
+        "standardscaler",
+        "StandardScaler()"
+      ],
+      [
+        "kneighborsclassifier",
+        "KNeighborsClassifier(algorithm='kd_tree', metric='manhattan', n_jobs=6,\n                     n_neighbors=13, weights='distance')"
+      ]
+    ],
+    "transform_input": null,
+    "verbose": false,
+    "standardscaler": "StandardScaler()",
+    "kneighborsclassifier": "KNeighborsClassifier(algorithm='kd_tree', metric='manhattan', n_jobs=6,\n                     n_neighbors=13, weights='distance')",
+    "standardscaler__copy": true,
+    "standardscaler__with_mean": true,
+    "standardscaler__with_std": true,
+    "kneighborsclassifier__algorithm": "kd_tree",
+    "kneighborsclassifier__leaf_size": 30,
+    "kneighborsclassifier__metric": "manhattan",
+    "kneighborsclassifier__metric_params": null,
+    "kneighborsclassifier__n_jobs": 6,
+    "kneighborsclassifier__n_neighbors": 13,
+    "kneighborsclassifier__p": 2,
+    "kneighborsclassifier__weights": "distance"
+  },
+  "folds": [
+    {
+      "candidate_rows": 229202,
+      "candidate_macro_f1": 0.8176863180458762,
+      "confusion_matrix": [
+        [
+          186000,
+          6738
+        ],
+        [
+          13822,
+          22642
+        ]
+      ],
+      "conditional_top1": 0.7407031592803861,
+      "end_to_end_top1": 0.6994432215460313,
+      "covered_observations": 36464,
+      "aligned_observations": 38615,
+      "candidate_hit_rate": 0.9442962579308559,
+      "log_loss": 0.3927118386695363,
+      "fold": 1,
+      "fit_seconds": 1.9682678999961354,
+      "inference_seconds": 3.6885402999978396
+    },
+    {
+      "candidate_rows": 231194,
+      "candidate_macro_f1": 0.8466696759210334,
+      "confusion_matrix": [
+        [
+          195881,
+          6145
+        ],
+        [
+          8860,
+          20308
+        ]
+      ],
+      "conditional_top1": 0.7616566099835436,
+      "end_to_end_top1": 0.7345832093376979,
+      "covered_observations": 29168,
+      "aligned_observations": 30243,
+      "candidate_hit_rate": 0.9644545845319578,
+      "log_loss": 0.25801823320613815,
+      "fold": 2,
+      "fit_seconds": 1.9512857000008808,
+      "inference_seconds": 3.662537299998803
+    },
+    {
+      "candidate_rows": 228997,
+      "candidate_macro_f1": 0.8556228691566561,
+      "confusion_matrix": [
+        [
+          186548,
+          6395
+        ],
+        [
+          10355,
+          25699
+        ]
+      ],
+      "conditional_top1": 0.7997725633771565,
+      "end_to_end_top1": 0.7896322260864803,
+      "covered_observations": 36054,
+      "aligned_observations": 36517,
+      "candidate_hit_rate": 0.9873209737930279,
+      "log_loss": 0.2975646793980057,
+      "fold": 3,
+      "fit_seconds": 1.936776499998814,
+      "inference_seconds": 3.84170759999688
+    },
+    {
+      "candidate_rows": 229301,
+      "candidate_macro_f1": 0.8387086810979583,
+      "confusion_matrix": [
+        [
+          189580,
+          7331
+        ],
+        [
+          9993,
+          22397
+        ]
+      ],
+      "conditional_top1": 0.7566224143254091,
+      "end_to_end_top1": 0.7393206226620007,
+      "covered_observations": 32390,
+      "aligned_observations": 33148,
+      "candidate_hit_rate": 0.9771328586943405,
+      "log_loss": 0.3154696249840893,
+      "fold": 4,
+      "fit_seconds": 1.8800334000043222,
+      "inference_seconds": 3.080787299993972
+    },
+    {
+      "candidate_rows": 229265,
+      "candidate_macro_f1": 0.8413237378958576,
+      "confusion_matrix": [
+        [
+          177143,
+          7196
+        ],
+        [
+          14321,
+          30605
+        ]
+      ],
+      "conditional_top1": 0.7839113208387125,
+      "end_to_end_top1": 0.7690191283081492,
+      "covered_observations": 44926,
+      "aligned_observations": 45796,
+      "candidate_hit_rate": 0.9810027076600576,
+      "log_loss": 0.35065568528163177,
+      "fold": 5,
+      "fit_seconds": 1.8497926000054576,
+      "inference_seconds": 3.4853539999967325
+    }
+  ],
+  "cv_macro_f1_mean": 0.8400022564234761,
+  "cv_macro_f1_sd": 0.014052391086518541,
+  "student_test": {
+    "candidate_rows": 108759,
+    "candidate_macro_f1": 0.8586808367564596,
+    "confusion_matrix": [
+      [
+        89318,
+        3017
+      ],
+      [
+        4558,
+        11866
+      ]
+    ],
+    "conditional_top1": 0.7971870433511934,
+    "end_to_end_top1": 0.7708566382101855,
+    "covered_observations": 16424,
+    "aligned_observations": 16985,
+    "candidate_hit_rate": 0.9669708566382101,
+    "log_loss": 0.28875922408371335,
+    "classifier_route_continuity": 0.8839880261469851,
+    "continuity_connected": 14470,
+    "continuity_transitions": 16369,
+    "fit_seconds": 2.6076227000012295,
+    "inference_seconds": 1.469184800000221
+  }
+}

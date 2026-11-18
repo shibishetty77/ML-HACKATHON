@@ -38,7 +38,9 @@ Set `PATHSNAP_EVALUATOR_DATA` to `evaluator_test.zip`, then from the repo root r
 - `backend/app/hmm.py`: log-space Viterbi with gaps and disconnected transitions.
 - `backend/app/main.py`: frontend-compatible API and post-prediction evaluation.
 - `frontend`: existing Next.js UI with runtime server URL setting and separate route chunks on the map.
-- `ML_Modles`: four original model notebooks in the checkout.
+- `ML_Modles`: original XGBoost, Random Forest, SVM and KNN notebooks; the Team 9 shared-feature MLP notebook and run are archived under `analysis/mlp_shared`.
 - `outputs/xgboost/hyperparameter_tuning`: unchanged supplied tuned JSON, selected parameters, Optuna study, CSV results, report, predictions and plots.
+- `analysis`: Team 9 five-model comparison, data audit, HMM ablation, Folium map, reproducibility scripts and live demo evidence. See [analysis guide](analysis/README.md).
+- `docs/PathSnap_Team9_Technical_Report.pdf`: original consolidated Team 9 report, with member names left for the team to add.
 
-See the [deliverable audit](docs/DELIVERABLE_AUDIT.md) for verified artifacts, the missing baseline model, newly added shared preprocessing source, and remaining submission work. The evaluator ZIP is kept outside Git.
+See the [deliverable audit](docs/DELIVERABLE_AUDIT.md) for verified artifacts and limitations. The evaluator ZIP is kept outside Git.

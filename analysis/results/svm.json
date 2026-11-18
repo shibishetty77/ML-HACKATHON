@@ -1,0 +1,186 @@
+{
+  "model": "svm",
+  "features": [
+    "distance_to_segment_m",
+    "projection_fraction",
+    "observation_speed_mps",
+    "heading_difference_rad"
+  ],
+  "protocol": "Shared four-feature candidate CSVs; frozen five trip folds; full train and validation rows; 10 held-out student-test trips.",
+  "configuration": {
+    "memory": null,
+    "steps": [
+      [
+        "standardscaler",
+        "StandardScaler()"
+      ],
+      [
+        "linearsvc",
+        "LinearSVC(class_weight='balanced', max_iter=5000, random_state=42)"
+      ]
+    ],
+    "transform_input": null,
+    "verbose": false,
+    "standardscaler": "StandardScaler()",
+    "linearsvc": "LinearSVC(class_weight='balanced', max_iter=5000, random_state=42)",
+    "standardscaler__copy": true,
+    "standardscaler__with_mean": true,
+    "standardscaler__with_std": true,
+    "linearsvc__C": 1.0,
+    "linearsvc__class_weight": "balanced",
+    "linearsvc__dual": "auto",
+    "linearsvc__fit_intercept": true,
+    "linearsvc__intercept_scaling": 1,
+    "linearsvc__loss": "squared_hinge",
+    "linearsvc__max_iter": 5000,
+    "linearsvc__multi_class": "ovr",
+    "linearsvc__penalty": "l2",
+    "linearsvc__random_state": 42,
+    "linearsvc__tol": 0.0001,
+    "linearsvc__verbose": 0
+  },
+  "folds": [
+    {
+      "candidate_rows": 229202,
+      "candidate_macro_f1": 0.7235631944198986,
+      "confusion_matrix": [
+        [
+          156013,
+          36725
+        ],
+        [
+          7245,
+          29219
+        ]
+      ],
+      "conditional_top1": 0.7128126371215445,
+      "end_to_end_top1": 0.6731063058396995,
+      "covered_observations": 36464,
+      "aligned_observations": 38615,
+      "candidate_hit_rate": 0.9442962579308559,
+      "log_loss": null,
+      "fold": 1,
+      "fit_seconds": 1.0018447000038577,
+      "inference_seconds": 0.01143199999933131
+    },
+    {
+      "candidate_rows": 231194,
+      "candidate_macro_f1": 0.6939560267702337,
+      "confusion_matrix": [
+        [
+          158695,
+          43331
+        ],
+        [
+          3869,
+          25299
+        ]
+      ],
+      "conditional_top1": 0.7141387822270981,
+      "end_to_end_top1": 0.6887544225109943,
+      "covered_observations": 29168,
+      "aligned_observations": 30243,
+      "candidate_hit_rate": 0.9644545845319578,
+      "log_loss": null,
+      "fold": 2,
+      "fit_seconds": 0.9768103999958839,
+      "inference_seconds": 0.009012900001835078
+    },
+    {
+      "candidate_rows": 228997,
+      "candidate_macro_f1": 0.739746630972854,
+      "confusion_matrix": [
+        [
+          154644,
+          38299
+        ],
+        [
+          4171,
+          31883
+        ]
+      ],
+      "conditional_top1": 0.7777223054307427,
+      "end_to_end_top1": 0.7678615439384396,
+      "covered_observations": 36054,
+      "aligned_observations": 36517,
+      "candidate_hit_rate": 0.9873209737930279,
+      "log_loss": null,
+      "fold": 3,
+      "fit_seconds": 0.8409807999996701,
+      "inference_seconds": 0.008125399996060878
+    },
+    {
+      "candidate_rows": 229301,
+      "candidate_macro_f1": 0.7135599054424766,
+      "confusion_matrix": [
+        [
+          156610,
+          40301
+        ],
+        [
+          4638,
+          27752
+        ]
+      ],
+      "conditional_top1": 0.7271380055572708,
+      "end_to_end_top1": 0.7105104380354772,
+      "covered_observations": 32390,
+      "aligned_observations": 33148,
+      "candidate_hit_rate": 0.9771328586943405,
+      "log_loss": null,
+      "fold": 4,
+      "fit_seconds": 0.8271105000021635,
+      "inference_seconds": 0.007837500001187436
+    },
+    {
+      "candidate_rows": 229265,
+      "candidate_macro_f1": 0.7486224862136748,
+      "confusion_matrix": [
+        [
+          144496,
+          39843
+        ],
+        [
+          5650,
+          39276
+        ]
+      ],
+      "conditional_top1": 0.7626096247162,
+      "end_to_end_top1": 0.7481221067342126,
+      "covered_observations": 44926,
+      "aligned_observations": 45796,
+      "candidate_hit_rate": 0.9810027076600576,
+      "log_loss": null,
+      "fold": 5,
+      "fit_seconds": 0.7234467999951448,
+      "inference_seconds": 0.007873999995354097
+    }
+  ],
+  "cv_macro_f1_mean": 0.7238896487638276,
+  "cv_macro_f1_sd": 0.021598547568511265,
+  "student_test": {
+    "candidate_rows": 108759,
+    "candidate_macro_f1": 0.7296990220389088,
+    "confusion_matrix": [
+      [
+        73911,
+        18424
+      ],
+      [
+        2138,
+        14286
+      ]
+    ],
+    "conditional_top1": 0.7646736483195324,
+    "end_to_end_top1": 0.7394171327642037,
+    "covered_observations": 16424,
+    "aligned_observations": 16985,
+    "candidate_hit_rate": 0.9669708566382101,
+    "log_loss": null,
+    "classifier_route_continuity": 0.8688985277048079,
+    "continuity_connected": 14223,
+    "continuity_transitions": 16369,
+    "fit_seconds": 0.9950743000008515,
+    "inference_seconds": 0.004469499996048398
+  }
+}

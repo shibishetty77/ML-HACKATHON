@@ -1,0 +1,23 @@
+{
+  "candidate_rows": 108759,
+  "candidate_macro_f1": 0.8759132810362589,
+  "confusion_matrix": [
+    [
+      89400,
+      2935
+    ],
+    [
+      3830,
+      12594
+    ]
+  ],
+  "conditional_top1": 0.8284827082318558,
+  "end_to_end_top1": 0.8011186340889019,
+  "covered_observations": 16424,
+  "aligned_observations": 16985,
+  "candidate_hit_rate": 0.9669708566382101,
+  "log_loss": 0.1580799689562951,
+  "classifier_route_continuity": 0.9051255421833955,
+  "continuity_connected": 14816,
+  "continuity_transitions": 16369
+}

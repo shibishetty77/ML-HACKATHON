@@ -1,0 +1,245 @@
+{
+  "model": "MLPClassifier (4 inputs, hidden layers 32 and 16, sigmoid binary output)",
+  "features": [
+    "distance_to_segment_m",
+    "projection_fraction",
+    "observation_speed_mps",
+    "heading_difference_rad"
+  ],
+  "training_rows": 1147959,
+  "training_trips": 80,
+  "training_positive_rate": 0.15593065606001608,
+  "student_test_rows": 108759,
+  "student_test_trips": 10,
+  "cv_strategy": "Provided frozen five folds, grouped by trip; StandardScaler fit on each training fold only.",
+  "cross_validation_mean_and_sd": {
+    "candidate_accuracy": {
+      "mean": 0.9269122213641685,
+      "std": 0.011105954337528715
+    },
+    "precision": {
+      "mean": 0.7987175936273984,
+      "std": 0.024055155468114868
+    },
+    "recall": {
+      "mean": 0.7078590034051688,
+      "std": 0.038035372851564116
+    },
+    "macro_f1": {
+      "mean": 0.8535570840487722,
+      "std": 0.014605182994750448
+    },
+    "roc_auc": {
+      "mean": 0.9581883188461402,
+      "std": 0.007411929658173828
+    },
+    "log_loss": {
+      "mean": 0.1794268007102455,
+      "std": 0.02227628667228328
+    },
+    "top1_accuracy_conditional_on_candidate_table": {
+      "mean": 0.7943639057518486,
+      "std": 0.02261702300491841
+    },
+    "top1_accuracy_end_to_end_over_aligned_observations": {
+      "mean": 0.7714645506285533,
+      "std": 0.0341996957345209
+    }
+  },
+  "folds": [
+    {
+      "candidate_rows": 229202,
+      "candidate_accuracy": 0.9162180085688607,
+      "precision": 0.7904816397967083,
+      "recall": 0.6440873189995612,
+      "macro_f1": 0.8304281203588958,
+      "roc_auc": 0.9457982354882802,
+      "log_loss": 0.2056471719733987,
+      "confusion_matrix_labels_0_1": [
+        [
+          186513,
+          6225
+        ],
+        [
+          12978,
+          23486
+        ]
+      ],
+      "aligned_observations": 38615,
+      "candidate_table_observations": 36464,
+      "candidate_hit_rate_from_coverage": 0.9442962579308559,
+      "top1_accuracy_conditional_on_candidate_table": 0.7688130759104871,
+      "top1_accuracy_end_to_end_over_aligned_observations": 0.725987310630584,
+      "coverage_ref_in_candidates_count": 36464,
+      "fold": 1,
+      "training_trip_count": 65,
+      "validation_trip_count": 15,
+      "epochs": 60,
+      "fit_seconds": 66.36373079999976
+    },
+    {
+      "candidate_rows": 231194,
+      "candidate_accuracy": 0.9403012188897636,
+      "precision": 0.7962520243695534,
+      "recall": 0.7079676357652221,
+      "macro_f1": 0.8578156694045966,
+      "roc_auc": 0.9625545896800193,
+      "log_loss": 0.1528671669327243,
+      "confusion_matrix_labels_0_1": [
+        [
+          196742,
+          5284
+        ],
+        [
+          8518,
+          20650
+        ]
+      ],
+      "aligned_observations": 30243,
+      "candidate_table_observations": 29168,
+      "candidate_hit_rate_from_coverage": 0.9644545845319578,
+      "top1_accuracy_conditional_on_candidate_table": 0.7862383433900164,
+      "top1_accuracy_end_to_end_over_aligned_observations": 0.7582911748173131,
+      "coverage_ref_in_candidates_count": 29168,
+      "fold": 2,
+      "training_trip_count": 63,
+      "validation_trip_count": 17,
+      "epochs": 60,
+      "fit_seconds": 65.04824290000033
+    },
+    {
+      "candidate_rows": 228997,
+      "candidate_accuracy": 0.9337109219771438,
+      "precision": 0.8182594377020187,
+      "recall": 0.7442724801686359,
+      "macro_f1": 0.8702528984140354,
+      "roc_auc": 0.9647662416677796,
+      "log_loss": 0.16709422893528564,
+      "confusion_matrix_labels_0_1": [
+        [
+          186983,
+          5960
+        ],
+        [
+          9220,
+          26834
+        ]
+      ],
+      "aligned_observations": 36517,
+      "candidate_table_observations": 36054,
+      "candidate_hit_rate_from_coverage": 0.9873209737930279,
+      "top1_accuracy_conditional_on_candidate_table": 0.8254839962278804,
+      "top1_accuracy_end_to_end_over_aligned_observations": 0.8150176630062711,
+      "coverage_ref_in_candidates_count": 36054,
+      "fold": 3,
+      "training_trip_count": 64,
+      "validation_trip_count": 16,
+      "epochs": 60,
+      "fit_seconds": 65.15785870000036
+    },
+    {
+      "candidate_rows": 229301,
+      "candidate_accuracy": 0.9295293086379911,
+      "precision": 0.76413344182262,
+      "recall": 0.7248533497993208,
+      "macro_f1": 0.8515583986731952,
+      "roc_auc": 0.9577167028453132,
+      "log_loss": 0.17235321082935628,
+      "confusion_matrix_labels_0_1": [
+        [
+          189664,
+          7247
+        ],
+        [
+          8912,
+          23478
+        ]
+      ],
+      "aligned_observations": 33148,
+      "candidate_table_observations": 32390,
+      "candidate_hit_rate_from_coverage": 0.9771328586943405,
+      "top1_accuracy_conditional_on_candidate_table": 0.782309354739117,
+      "top1_accuracy_end_to_end_over_aligned_observations": 0.7644201761795584,
+      "coverage_ref_in_candidates_count": 32390,
+      "fold": 4,
+      "training_trip_count": 64,
+      "validation_trip_count": 16,
+      "epochs": 60,
+      "fit_seconds": 64.80274189999909
+    },
+    {
+      "candidate_rows": 229265,
+      "candidate_accuracy": 0.914801648747083,
+      "precision": 0.8244614244460914,
+      "recall": 0.7181142322931042,
+      "macro_f1": 0.8577303333931383,
+      "roc_auc": 0.9601058245493092,
+      "log_loss": 0.19917222488046257,
+      "confusion_matrix_labels_0_1": [
+        [
+          177470,
+          6869
+        ],
+        [
+          12664,
+          32262
+        ]
+      ],
+      "aligned_observations": 45796,
+      "candidate_table_observations": 44926,
+      "candidate_hit_rate_from_coverage": 0.9810027076600576,
+      "top1_accuracy_conditional_on_candidate_table": 0.8089747584917419,
+      "top1_accuracy_end_to_end_over_aligned_observations": 0.7936064285090401,
+      "coverage_ref_in_candidates_count": 44926,
+      "fold": 5,
+      "training_trip_count": 64,
+      "validation_trip_count": 16,
+      "epochs": 60,
+      "fit_seconds": 67.11163459999989
+    }
+  ],
+  "final_fit_epochs": 60,
+  "final_fit_seconds": 81.1852302999996,
+  "student_test_metrics": {
+    "candidate_rows": 108759,
+    "candidate_accuracy": 0.9373752976765142,
+    "precision": 0.8088414830045622,
+    "recall": 0.7664393570384803,
+    "macro_f1": 0.8751794504594417,
+    "roc_auc": 0.9668521831876564,
+    "log_loss": 0.15972521765228065,
+    "confusion_matrix_labels_0_1": [
+      [
+        89360,
+        2975
+      ],
+      [
+        3836,
+        12588
+      ]
+    ],
+    "aligned_observations": 16985,
+    "candidate_table_observations": 16424,
+    "candidate_hit_rate_from_coverage": 0.9669708566382101,
+    "top1_accuracy_conditional_on_candidate_table": 0.8261690209449586,
+    "top1_accuracy_end_to_end_over_aligned_observations": 0.798881365911098,
+    "coverage_ref_in_candidates_count": 16424
+  },
+  "student_test_inference_seconds": 0.02769859999898472,
+  "training_settings": {
+    "activation": "relu",
+    "solver": "adam",
+    "alpha": 0.001,
+    "learning_rate_init": 0.001,
+    "batch_size": 2048,
+    "random_state": 42,
+    "max_epochs": 60,
+    "early_stop": "training loss plateau, 12 epochs"
+  },
+  "known_data_limitations": [
+    "Candidate CSVs contain only observation groups with a positive reference candidate. Groups with candidate negatives but no positive are absent, so candidate-level and conditional Top-1 metrics are conditional on a reference candidate being present.",
+    "Coverage num_candidates/has_candidate disagree with the candidate CSV for observations whose reference arc is absent; coverage ref_in_candidates remains the provided measure for candidate hit rate.",
+    "Arc endpoint connectivity is not included, so route continuity cannot be computed from this archive alone.",
+    "Reference labels are weak pointwise alignments; reported scores measure agreement with these labels."
+  ]
+}

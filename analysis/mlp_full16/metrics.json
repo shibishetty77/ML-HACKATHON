@@ -1,0 +1,163 @@
+{
+  "model": "MLPClassifier",
+  "owner": "Member 3",
+  "contract_version": "team-plan-v2-full16",
+  "feature_count": 16,
+  "architecture": [
+    16,
+    32,
+    16,
+    1
+  ],
+  "seed": 352,
+  "folds": 5,
+  "cv_strategy": "sklearn GroupKFold(n_splits=5, shuffle=False), groups=trip_id, balanced by eligible candidate-row counts.",
+  "cv": {
+    "accuracy": {
+      "mean": 0.9322655134183886,
+      "std": 0.020895884368303797
+    },
+    "precision": {
+      "mean": 0.8041261295242214,
+      "std": 0.07398901211049297
+    },
+    "recall": {
+      "mean": 0.7467417401650953,
+      "std": 0.06994893257154144
+    },
+    "macro_f1": {
+      "mean": 0.8667156532333365,
+      "std": 0.038341671982456735
+    },
+    "top1_accuracy": {
+      "mean": 0.8000628298646941,
+      "std": 0.06535758391613421
+    },
+    "candidate_miss_rate": {
+      "mean": 0.008284672214863358,
+      "std": 0.005737958224603872
+    },
+    "log_loss": {
+      "mean": 0.1621108129620552,
+      "std": 0.042528840490073404
+    },
+    "route_continuity": {
+      "mean": 0.9163390884187672,
+      "std": 0.010512802101760178
+    },
+    "fit_seconds": {
+      "mean": 96.66423552000015,
+      "std": 14.004187173325471
+    },
+    "inference_seconds": {
+      "mean": 0.06292508000015004,
+      "std": 0.006625704692792759
+    }
+  },
+  "final_fit": {
+    "epochs": 60,
+    "status": "training_objective_plateau",
+    "fit_seconds": 96.14531850000003
+  },
+  "training": {
+    "accuracy": 0.9369723033883545,
+    "precision": 0.8095593641529544,
+    "recall": 0.7736148102155194,
+    "macro_f1": 0.8770320252416515,
+    "top1_accuracy": 0.8138440932804787,
+    "candidate_miss_rate": 0.008419654140698415,
+    "log_loss": 0.1470954418182373,
+    "route_continuity": 0.9171444112309685,
+    "candidate_rows": 1189604,
+    "all_candidate_rows": 1350842,
+    "observations": 208417,
+    "eligible_observations": 185162,
+    "excluded_observations": 23255,
+    "continuity_pairs": 207747,
+    "positive_candidates": 183603,
+    "negative_candidates": 1006001,
+    "confusion_matrix": [
+      [
+        972588,
+        33413
+      ],
+      [
+        41565,
+        142038
+      ]
+    ]
+  },
+  "student_test": {
+    "accuracy": 0.9392702545419759,
+    "precision": 0.8112746429153316,
+    "recall": 0.7828730150411404,
+    "macro_f1": 0.8805602989242008,
+    "top1_accuracy": 0.8224010871269535,
+    "candidate_miss_rate": 0.002717817383578111,
+    "log_loss": 0.14486612379550934,
+    "route_continuity": 0.9244365423835172,
+    "candidate_rows": 125441,
+    "all_candidate_rows": 125556,
+    "observations": 19160,
+    "eligible_observations": 19133,
+    "excluded_observations": 27,
+    "continuity_pairs": 19123,
+    "positive_candidates": 19081,
+    "negative_candidates": 106360,
+    "confusion_matrix": [
+      [
+        102885,
+        3475
+      ],
+      [
+        4143,
+        14938
+      ]
+    ]
+  },
+  "class_balance": {
+    "training_positive": 183603,
+    "training_candidate_rows": 1189604,
+    "student_test_positive": 19081,
+    "student_test_candidate_rows": 125441,
+    "policy": "No class weighting, no under/oversampling. Natural eligible candidate distribution."
+  },
+  "timing": {
+    "threads": 4,
+    "warmup_rows": 1024,
+    "repeats": 5,
+    "statistic": "median",
+    "inference_seconds": 0.03415640000002895,
+    "repeat_seconds": [
+      0.04077629999983401,
+      0.027921500000047672,
+      0.03415640000002895,
+      0.03548530000034589,
+      0.031016599999929895
+    ],
+    "seconds_per_candidate": 2.7204116091647516e-07,
+    "seconds_per_observation": 1.7826931106486927e-06,
+    "included": "StandardScaler transform and MLP predict_proba; excluded loading/candidate generation/evaluation."
+  },
+  "initial_configuration": {
+    "hidden_layer_sizes": [
+      32,
+      16
+    ],
+    "activation": "relu",
+    "output": "sigmoid",
+    "solver": "adam",
+    "alpha": 0.001,
+    "learning_rate_init": 0.001,
+    "batch_size": 2048,
+    "max_epochs": 200,
+    "tol": 0.0001,
+    "patience": 15,
+    "epoch_method": "partial_fit preserves Adam state; one complete pass per epoch.",
+    "stop_rule": "Training objective plateau only; validation history is observed, not used for stopping.",
+    "preprocessing": "StandardScaler fitted on training-fold eligible rows only."
+  },
+  "label_caveat": "Pointwise targets are weak monotone reference alignment; distances >50m excluded from supervised metrics.",
+  "continuity_policy": "All consecutive original predictions in a trip, same arc or directed end-to-start node adjacency, 0<dt<=10s; independent of reference labels.",
+  "winner": "Not selected: KNN, XGBoost, Random Forest and calibrated RBF-SVM owner results are pending."
+}

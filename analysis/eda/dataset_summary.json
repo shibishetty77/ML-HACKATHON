@@ -1,0 +1,51 @@
+{
+  "train": {
+    "observations": 208417,
+    "nodes": 1933485,
+    "arcs": 3876904,
+    "route_arcs": 31336,
+    "nonpositive_dt": 0,
+    "gaps_gt_1s": 7286,
+    "gaps_gt_10s": 590,
+    "one_second_steps": 201053,
+    "missing_or_nonfinite_values": 0,
+    "invalid_coordinates": 0,
+    "isolated_nodes": 0,
+    "zero_length_arcs": 100,
+    "reference_disconnected_pairs": 13,
+    "trips": 80,
+    "files": 320,
+    "gps_distance_km": 2978.415085891347,
+    "max_gap_s": 153064.0,
+    "observation_min": 361,
+    "observation_median": 1529.0,
+    "observation_max": 19313
+  },
+  "student_test": {
+    "observations": 19160,
+    "nodes": 90689,
+    "arcs": 185041,
+    "route_arcs": 3477,
+    "nonpositive_dt": 0,
+    "gaps_gt_1s": 264,
+    "gaps_gt_10s": 27,
+    "one_second_steps": 18886,
+    "missing_or_nonfinite_values": 0,
+    "invalid_coordinates": 0,
+    "isolated_nodes": 0,
+    "zero_length_arcs": 6,
+    "reference_disconnected_pairs": 1,
+    "trips": 10,
+    "files": 40,
+    "gps_distance_km": 296.96781626231484,
+    "max_gap_s": 210.0,
+    "observation_min": 262,
+    "observation_median": 1420.0,
+    "observation_max": 3958
+  },
+  "notes": [
+    "Node/arc totals count trip-local networks; shared roads may appear in several trips.",
+    "Reference route rows are not observation-level labels.",
+    "All 360 files were parsed and hashed. Validation fails rather than silently dropping invalid data."
+  ]
+}

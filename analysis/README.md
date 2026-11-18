@@ -54,5 +54,7 @@ raw GPS points, road geometry, reference route, and deployed XGBoost plus HMM
 geometry. Its street tiles require an internet connection.
 
 The screenshots in `evidence/` were supplied from the live two-laptop demo.
+The report uses the supplied Route Explorer capture for the map figure; the
+Folium HTML is a separate interactive artifact.
 `results/figures/` contains plots generated only from archived CSV/JSON
 results. No result is derived from another team's report.

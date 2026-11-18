@@ -41,6 +41,6 @@ Set `PATHSNAP_EVALUATOR_DATA` to `evaluator_test.zip`, then from the repo root r
 - `ML_Modles`: original XGBoost, Random Forest, SVM and KNN notebooks; the Team 9 shared-feature MLP notebook and run are archived under `analysis/mlp_shared`.
 - `outputs/xgboost/hyperparameter_tuning`: unchanged supplied tuned JSON, selected parameters, Optuna study, CSV results, report, predictions and plots.
 - `analysis`: Team 9 five-model comparison, data audit, HMM ablation, Folium map, reproducibility scripts and live demo evidence. See [analysis guide](analysis/README.md).
-- `docs/PathSnap_Team9_Technical_Report.pdf`: original consolidated Team 9 report, with member names left for the team to add.
+- `docs/PathSnap_Team9_Technical_Report.pdf`: original consolidated Team 9 report with the four team members and live demo screenshots.
 
 See the [deliverable audit](docs/DELIVERABLE_AUDIT.md) for verified artifacts and limitations. The evaluator ZIP is kept outside Git.
